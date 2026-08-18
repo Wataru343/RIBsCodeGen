@@ -6,79 +6,107 @@
 //
 
 import Foundation
+import SourceKittenFramework
 
-extension SwiftNode {
+extension Dictionary where Key == String {
     func getKeyName() -> String {
-        name
+        self["key.name"] as? String ?? ""
     }
-
+    
     func getTypeName() -> String {
-        typeName
+        self["key.typename"] as? String ?? ""
     }
 
     func getDeclarationKind() -> SwiftDeclarationKind? {
-        SwiftDeclarationKind(rawValue: kind)
+        guard let kindValue = self["key.kind"] as? String else {
+            return nil
+        }
+        return SwiftDeclarationKind(rawValue: kindValue)
     }
 
-    func getAttributes() -> [SwiftAttribute] {
-        attributes
+    func getAttributes() -> [[String: SourceKitRepresentable]] {
+        guard let attributes = self["key.attributes"] as? [[String: SourceKitRepresentable]] else {
+            return [[String: SourceKitRepresentable]]()
+        }
+        return attributes
     }
 
-    func getInheritedTypes() -> [SwiftInheritedType] {
-        inheritedTypes
+    func getInheritedTypes() -> [[String: SourceKitRepresentable]] {
+        guard let inheritedtypes = self["key.inheritedtypes"] as? [[String: SourceKitRepresentable]] else {
+            return [[String: SourceKitRepresentable]]()
+        }
+        return inheritedtypes
     }
 
-    func getSubStructures() -> [SwiftNode] {
-        substructures
+    func getElements() -> [[String: SourceKitRepresentable]] {
+        guard let elements = self["key.elements"] as? [[String: SourceKitRepresentable]] else {
+            return [[String: SourceKitRepresentable]]()
+        }
+        return elements
+    }
+
+    func getSubStructures() -> [[String: SourceKitRepresentable]] {
+        guard let substructures = self["key.substructure"] as? [[String: SourceKitRepresentable]] else {
+            return [[String: SourceKitRepresentable]]()
+        }
+        return substructures
     }
 
     func getOuterLeadingPosition() -> Int {
         // 外側の先頭の位置を確認する 【ここ→self.functionName（）】
-        nameOffset
+        let targetLeadingPosition = self["key.nameoffset"] as? Int64 ?? 0
+        return Int(targetLeadingPosition)
     }
 
     func getInnerLeadingPosition() -> Int {
         // 内側の先頭の位置を確認する 【self.functionName（←ここ）】
-        bodyOffset
+        let targetLeadingPosition = self["key.bodyoffset"] as? Int64 ?? 0
+        return Int(targetLeadingPosition)
     }
 
     func getInnerTrailingPosition() -> Int {
         // 内側の末尾の位置を確認する 【self.functionName（ここ→）】
-        bodyOffset + bodyLength
+        let targetBodyOffset = self["key.bodyoffset"] as? Int64 ?? 0
+        let targetBodyLength = self["key.bodylength"] as? Int64 ?? 0
+        return Int(targetBodyOffset + targetBodyLength)
     }
 
     func getOuterTrailingPosition() -> Int {
         // 外側の末尾の位置を確認する 【self.functionName（）←ここ】
         return getInnerTrailingPosition() + 1
     }
-
+    
     func getVariableTypeLeadingPosition() -> Int {
         // プロパティの型の先頭の位置を確認する【var router: ここ→OrderRouting?】
-        nameOffset + nameLength
+        let targetNameOffset = self["key.nameoffset"] as? Int64 ?? 0
+        let targetNameLength = self["key.namelength"] as? Int64 ?? 0
+        return Int(targetNameOffset + targetNameLength)
     }
-
+    
     func getVariableTypeTrailingPosition() -> Int {
         // プロパティの型の先頭の位置を確認する【var router: OrderRouting?←ここ】
-        offset + length
+        let targetOffset = self["key.offset"] as? Int64 ?? 0
+        let targetLength = self["key.length"] as? Int64 ?? 0
+        return Int(targetOffset + targetLength)
     }
-
+    
     func getKeyNameLength() -> Int {
-        nameLength
+        Int(self["key.namelength"] as? Int64 ?? 0)
     }
-
+    
     func getKeyLength() -> Int {
-        length
+        Int(self["key.length"] as? Int64 ?? 0)
     }
-
+    
     func getKeyOffset() -> Int {
-        offset
+        Int(self["key.offset"] as? Int64 ?? 0)
     }
-
+    
     func getKeyBodyOffset() -> Int {
-        bodyOffset
+        Int(self["key.bodyoffset"] as? Int64 ?? 0)
     }
-
+    
     func getKeyBodyLength() -> Int {
-        bodyLength
+        Int(self["key.bodylength"] as? Int64 ?? 0)
     }
 }
