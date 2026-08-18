@@ -12,7 +12,7 @@ extension Dictionary where Key == String {
     func getKeyName() -> String {
         self["key.name"] as? String ?? ""
     }
-    
+
     func getTypeName() -> String {
         self["key.typename"] as? String ?? ""
     }
@@ -75,37 +75,37 @@ extension Dictionary where Key == String {
         // 外側の末尾の位置を確認する 【self.functionName（）←ここ】
         return getInnerTrailingPosition() + 1
     }
-    
+
     func getVariableTypeLeadingPosition() -> Int {
         // プロパティの型の先頭の位置を確認する【var router: ここ→OrderRouting?】
         let targetNameOffset = self["key.nameoffset"] as? Int64 ?? 0
         let targetNameLength = self["key.namelength"] as? Int64 ?? 0
         return Int(targetNameOffset + targetNameLength)
     }
-    
+
     func getVariableTypeTrailingPosition() -> Int {
         // プロパティの型の先頭の位置を確認する【var router: OrderRouting?←ここ】
         let targetOffset = self["key.offset"] as? Int64 ?? 0
         let targetLength = self["key.length"] as? Int64 ?? 0
         return Int(targetOffset + targetLength)
     }
-    
+
     func getKeyNameLength() -> Int {
         Int(self["key.namelength"] as? Int64 ?? 0)
     }
-    
+
     func getKeyLength() -> Int {
         Int(self["key.length"] as? Int64 ?? 0)
     }
-    
+
     func getKeyOffset() -> Int {
         Int(self["key.offset"] as? Int64 ?? 0)
     }
-    
+
     func getKeyBodyOffset() -> Int {
         Int(self["key.bodyoffset"] as? Int64 ?? 0)
     }
-    
+
     func getKeyBodyLength() -> Int {
         Int(self["key.bodylength"] as? Int64 ?? 0)
     }

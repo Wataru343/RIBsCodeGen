@@ -16,7 +16,7 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "RIBsCodeGen", 
+            name: "RIBsCodeGen",
             dependencies: [
                 .product(name: "SourceKittenFramework", package: "SourceKitten"),
                 "PathKit",
