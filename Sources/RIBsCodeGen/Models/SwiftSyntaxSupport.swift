@@ -143,11 +143,6 @@ private enum LineParser {
 }
 
 private enum SwiftFileFormatter {
-    private struct ParenthesisIndent {
-        let continuationIndent: Int
-        let closingIndent: Int
-    }
-
     static func format(contents: String,
                        trimmingTrailingWhitespace: Bool,
                        useTabs: Bool,
@@ -155,7 +150,7 @@ private enum SwiftFileFormatter {
         let rawLines = contents.split(separator: "\n", omittingEmptySubsequences: false).map(String.init)
         var formattedLines: [String] = []
         var braceDepth = 0
-        var parenStack: [ParenthesisIndent] = []
+        var parenStack: [Int] = []
         var inheritanceIndent: Int?
 
         for rawLine in rawLines {
@@ -173,10 +168,8 @@ private enum SwiftFileFormatter {
             let indent: Int
             if let inheritanceIndent, !trimmedLine.startsTypeDeclaration {
                 indent = inheritanceIndent
-            } else if trimmedLine.startsWithClosingParenthesis, let parenthesisIndent = parenStack.last {
-                indent = parenthesisIndent.closingIndent
-            } else if let parenthesisIndent = parenStack.last, !trimmedLine.hasPrefix("}") {
-                indent = parenthesisIndent.continuationIndent
+            } else if let continuationIndent = parenStack.last, !trimmedLine.hasPrefix("}") {
+                indent = continuationIndent
             } else {
                 indent = baseIndent
             }
@@ -186,8 +179,6 @@ private enum SwiftFileFormatter {
 
             updateContext(
                 line: normalizedLine,
-                currentIndent: indent,
-                indentWidth: indentWidth,
                 braceDepth: &braceDepth,
                 parenStack: &parenStack,
                 inheritanceIndent: &inheritanceIndent
@@ -220,10 +211,8 @@ private enum SwiftFileFormatter {
     }
 
     private static func updateContext(line: String,
-                                      currentIndent: Int,
-                                      indentWidth: Int,
                                       braceDepth: inout Int,
-                                      parenStack: inout [ParenthesisIndent],
+                                      parenStack: inout [Int],
                                       inheritanceIndent: inout Int?) {
         inheritanceIndent = nextInheritanceIndent(current: inheritanceIndent, line: line)
 
@@ -255,18 +244,7 @@ private enum SwiftFileFormatter {
             case "\"":
                 isInsideString = true
             case "(":
-                let continuationIndent: Int
-                if hasInlineContentAfterOpenParenthesis(characters: characters, openParenthesisIndex: index) {
-                    continuationIndent = index + 1
-                } else {
-                    continuationIndent = currentIndent + indentWidth
-                }
-                parenStack.append(
-                    ParenthesisIndent(
-                        continuationIndent: continuationIndent,
-                        closingIndent: currentIndent
-                    )
-                )
+                parenStack.append(index + 1)
             case ")":
                 if !parenStack.isEmpty {
                     parenStack.removeLast()
@@ -281,27 +259,6 @@ private enum SwiftFileFormatter {
 
             index += 1
         }
-    }
-
-    private static func hasInlineContentAfterOpenParenthesis(characters: [Character],
-                                                             openParenthesisIndex: Int) -> Bool {
-        var index = openParenthesisIndex + 1
-
-        while index < characters.count {
-            let character = characters[index]
-
-            if character == "/" && index + 1 < characters.count && characters[index + 1] == "/" {
-                return false
-            }
-
-            if !character.isWhitespace {
-                return true
-            }
-
-            index += 1
-        }
-
-        return false
     }
 
     private static func nextInheritanceIndent(current: Int?, line: String) -> Int? {
@@ -721,10 +678,6 @@ private extension StringProtocol {
 }
 
 private extension String {
-    var startsWithClosingParenthesis: Bool {
-        trimmingCharacters(in: .whitespaces).hasPrefix(")")
-    }
-
     var startsTypeDeclaration: Bool {
         let trimmed = trimmingCharacters(in: .whitespaces)
         return trimmed.hasPrefix("protocol ")
